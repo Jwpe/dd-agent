@@ -143,6 +143,13 @@ class YarnCheck(AgentCheck):
     '''
     Extract statistics from YARN's ResourceManger REST API
     '''
+    _ALLOWED_APPLICATION_TAGS = [
+        'applicationTags',
+        'applicationType',
+        'name',
+        'queue',
+        'user'
+    ]
 
     def check(self, instance):
 
@@ -154,8 +161,15 @@ class YarnCheck(AgentCheck):
             self.log.error('application_tags is incorrect: %s is not a dictionary', app_tags)
             app_tags = {}
 
+        filtered_app_tags = {}
+        for dd_prefix, yarn_key in app_tags.iteritems():
+            if yarn_key in self._ALLOWED_APPLICATION_TAGS:
+                filtered_app_tags[dd_prefix] = yarn_key
+        app_tags = filtered_app_tags
+
         # Collected by default
         app_tags['app_name'] = 'name'
+
 
         # Get additional tags from the conf file
         tags = instance.get('tags', [])
